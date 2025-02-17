@@ -23,7 +23,7 @@ public class InvoiceTest {
 
     @Test
     public void testEmptyInvoiceHasEmptySubtotal() {
-        Assert.assertThat(BigDecimal.ZERO, Matchers.comparesEqualTo(invoice.getSubtotal()));
+        Assert.assertThat(BigDecimal.ZERO, Matchers.comparesEqualTo(invoice.getNetPrice()));
     }
 
     @Test
@@ -42,21 +42,21 @@ public class InvoiceTest {
         Product apples = new TaxFreeProduct("Owoce", new BigDecimal("10"));
         invoice.addProduct(onions);
         invoice.addProduct(apples);
-        Assert.assertThat(new BigDecimal("20"), Matchers.comparesEqualTo(invoice.getSubtotal()));
+        Assert.assertThat(new BigDecimal("20"), Matchers.comparesEqualTo(invoice.getNetPrice()));
     }
 
     @Test
     public void testInvoiceSubtotalWithManySameProducts() {
         Product onions = new TaxFreeProduct("Warzywa", BigDecimal.valueOf(10));
         invoice.addProduct(onions, 100);
-        Assert.assertThat(new BigDecimal("1000"), Matchers.comparesEqualTo(invoice.getSubtotal()));
+        Assert.assertThat(new BigDecimal("1000"), Matchers.comparesEqualTo(invoice.getNetPrice()));
     }
 
     @Test
     public void testInvoiceHasTheSameSubtotalAndTotalIfTaxIsZero() {
         Product taxFreeProduct = new TaxFreeProduct("Warzywa", new BigDecimal("199.99"));
         invoice.addProduct(taxFreeProduct);
-        Assert.assertThat(invoice.getTotal(), Matchers.comparesEqualTo(invoice.getSubtotal()));
+        Assert.assertThat(invoice.getTotal(), Matchers.comparesEqualTo(invoice.getNetPrice()));
     }
 
     @Test
@@ -64,7 +64,7 @@ public class InvoiceTest {
         invoice.addProduct(new TaxFreeProduct("Owoce", new BigDecimal("200")));
         invoice.addProduct(new DairyProduct("Maslanka", new BigDecimal("100")));
         invoice.addProduct(new OtherProduct("Wino", new BigDecimal("10")));
-        Assert.assertThat(new BigDecimal("310"), Matchers.comparesEqualTo(invoice.getSubtotal()));
+        Assert.assertThat(new BigDecimal("310"), Matchers.comparesEqualTo(invoice.getNetPrice()));
     }
 
     @Test
@@ -90,18 +90,18 @@ public class InvoiceTest {
     }
 
     @Test
-    public void testInvoiceHasPropoerSubtotalWithQuantityMoreThanOne() {
+    public void testInvoiceHasProperSubtotalWithQuantityMoreThanOne() {
         // 2x kubek - price: 10
         invoice.addProduct(new TaxFreeProduct("Kubek", new BigDecimal("5")), 2);
         // 3x kozi serek - price: 30
         invoice.addProduct(new DairyProduct("Kozi Serek", new BigDecimal("10")), 3);
         // 1000x pinezka - price: 10
         invoice.addProduct(new OtherProduct("Pinezka", new BigDecimal("0.01")), 1000);
-        Assert.assertThat(new BigDecimal("50"), Matchers.comparesEqualTo(invoice.getSubtotal()));
+        Assert.assertThat(new BigDecimal("50"), Matchers.comparesEqualTo(invoice.getNetPrice()));
     }
 
     @Test
-    public void testInvoiceHasPropoerTotalWithQuantityMoreThanOne() {
+    public void testInvoiceHasProperTotalWithQuantityMoreThanOne() {
         // 2x chleb - price with tax: 10
         invoice.addProduct(new TaxFreeProduct("Chleb", new BigDecimal("5")), 2);
         // 3x chedar - price with tax: 32.40
