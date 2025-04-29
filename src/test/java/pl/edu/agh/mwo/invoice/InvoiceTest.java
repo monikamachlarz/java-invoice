@@ -1,6 +1,8 @@
 package pl.edu.agh.mwo.invoice;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 import org.hamcrest.Matchers;
 import org.junit.Assert;
@@ -8,16 +10,17 @@ import org.junit.Before;
 import org.junit.Test;
 
 import pl.edu.agh.mwo.invoice.Invoice;
-import pl.edu.agh.mwo.invoice.product.DairyProduct;
-import pl.edu.agh.mwo.invoice.product.OtherProduct;
-import pl.edu.agh.mwo.invoice.product.Product;
-import pl.edu.agh.mwo.invoice.product.TaxFreeProduct;
+import pl.edu.agh.mwo.invoice.product.*;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class InvoiceTest {
     private Invoice invoice;
 
     @Before
     public void createEmptyInvoiceForTheTest() {
+        Invoice.resetInvoiceNumberForTest();
         invoice = new Invoice();
     }
 
@@ -133,18 +136,123 @@ public class InvoiceTest {
     }
 
     @Test
-    public void testInvoiceNumberHasProperLenght(){
-        int number = invoice.getNumber();
-        Assert.assertThat(number, Matchers.greaterThan(0));
+    public void invoiceNumberShouldBeImmutable() {
+        int numberBefore = invoice.getNumber();
+        int numberAfter = invoice.getNumber();
+        assertEquals(numberBefore, numberAfter);
     }
 
     @Test
     public void testInvoiceNumberHaveConsequentNumber(){
-        int number1 = new Invoice().getNumber();
-        int number2 = new Invoice().getNumber();
-        Assert.assertThat(number1, Matchers.equalTo(number2 - 1));
+        Invoice invoice1 = new Invoice();
+        Invoice invoice2 = new Invoice();
+        Invoice invoice3 = new Invoice();
+
+        assertEquals(invoice1.getNumber() + 1, invoice2.getNumber());
+        assertEquals(invoice2.getNumber() + 1, invoice3.getNumber());
     }
 
+    @Test
+    public void testFormattedNumberHasCorrectStructure() {
+        assertTrue(invoice.getFormattedNumber().matches("\\d{5}/\\d{4}-\\d{2}-\\d{2}"));
+    }
 
+    @Test
+    public void testFormattedNumberContainsCurrentDate() {
+        String today = LocalDate.now().format(DateTimeFormatter.ISO_DATE);
+        assertTrue(invoice.getFormattedNumber().endsWith("/" + today));
+    }
 
+    @Test
+    public void testSummaryIncludesInvoiceNumber() {
+        String summary = invoice.getProductSummary();
+        assertTrue(summary.startsWith("Faktura nr: 00001"));
+    }
+
+    @Test
+    public void testSummaryWithSingleProduct() {
+        invoice.addProduct(new DairyProduct("Mleko", new BigDecimal("3.50")), 2);
+
+        String summary = invoice.getProductSummary();
+        assertTrue(summary.contains("Mleko, 2 szt., 3.50 zł"));
+        assertTrue(summary.contains("Liczba pozycji: 1"));
+    }
+
+    @Test
+    public void testSummaryWithMultipleProducts() {
+        invoice.addProduct(new DairyProduct("Mleko", new BigDecimal("3.50")), 2);
+        invoice.addProduct(new OtherProduct("Mydło", new BigDecimal("2.00")), 1);
+
+        String summary = invoice.getProductSummary();
+
+        assertTrue(summary.contains("Mleko, 2 szt., 3.50 zł"));
+        assertTrue(summary.contains("Mydło, 1 szt., 2.00 zł"));
+        assertTrue(summary.contains("Liczba pozycji: 2"));
+    }
+
+    @Test
+    public void testEmptyInvoiceSummary() {
+        String summary = invoice.getProductSummary();
+        assertTrue(summary.contains("Faktura nr: 00001"));
+        assertTrue(summary.contains("Liczba pozycji: 0"));
+    }
+
+    @Test
+    public void testAddingSameProductTwiceIncreasesQuantity() {
+        DairyProduct product1 = new DairyProduct("Mleko", new BigDecimal("3.50"));
+
+        invoice.addProduct(product1, 2);
+        invoice.addProduct(product1, 3);
+
+        String summary = invoice.getProductSummary();
+
+        assertTrue(summary.contains("Mleko, 5 szt., 3.50 zł"));
+        assertTrue(summary.contains("Liczba pozycji: 1"));
+    }
+
+    @Test
+    public void testFuelCanisterPriceIncludesTaxAndExcise() {
+        FuelCanister fuel = new FuelCanister("ON", new BigDecimal("100.00"));
+        fuel.setTestDate(LocalDate.of(2025, 4, 29));
+
+        BigDecimal expected = new BigDecimal("100.00")
+                .multiply(new BigDecimal("1.23"))
+                .add(new BigDecimal("5.56"));
+
+        assertEquals(0, expected.compareTo(fuel.getPriceWithTax()));
+    }
+
+    @Test
+    public void testFuelCanisterPriceWithoutTaxOnMothersInLawDay() {
+        FuelCanister fuel = new FuelCanister("ON", new BigDecimal("100.00"));
+        fuel.setTestDate(LocalDate.of(2025, 3, 5));
+
+        BigDecimal expected = new BigDecimal("100.00").add(new BigDecimal("5.56"));
+
+        assertEquals(0, expected.compareTo(fuel.getPriceWithTax()));
+    }
+
+    @Test
+    public void testInvoiceWithMixedProducts_RegularDay() {
+        DairyProduct bread = new DairyProduct("Chleb", new BigDecimal("10.00"));
+        BottleOfWine wine = new BottleOfWine("Wino", new BigDecimal("20.00"));
+        FuelCanister fuel = new FuelCanister("ON", new BigDecimal("100.00"));
+
+        invoice.addProduct(bread, 1);
+        invoice.addProduct(wine, 1);
+        fuel.setTestDate(LocalDate.of(2025, 4, 29));
+        invoice.addProduct(fuel, 1);
+
+        BigDecimal netExpected = new BigDecimal("10.00")
+                .add(new BigDecimal("20.00"))
+                .add(new BigDecimal("100.00"));
+
+        BigDecimal grossExpected =
+                bread.getPrice().multiply(new BigDecimal("1.08"))
+                        .add(wine.getPrice().multiply(new BigDecimal("1.23")).add(new BigDecimal("5.56")))
+                        .add(fuel.getPrice().multiply(new BigDecimal("1.23")).add(new BigDecimal("5.56")));
+
+        assertEquals(0, netExpected.compareTo(invoice.getNetTotal()));
+        assertEquals(0, grossExpected.compareTo(invoice.getGrossTotal()));
+    }
 }
