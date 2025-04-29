@@ -5,6 +5,9 @@ import java.time.LocalDate;
 
 public class FuelCanister extends Product {
     private static final BigDecimal excise = new BigDecimal("5.56");
+    private static final int month = 3;
+    private static final int day = 5;
+
     private LocalDate testDate = null; // tylko do testów
 
     public FuelCanister(String name, BigDecimal price) {
@@ -21,8 +24,6 @@ public class FuelCanister extends Product {
     }
 
     private boolean isTaxFreeDay(LocalDate date) {
-        int month = 3;
-        int day = 5;
         return date.getMonthValue() == month && date.getDayOfMonth() == day;
     }
 
