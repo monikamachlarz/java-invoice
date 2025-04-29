@@ -1,5 +1,7 @@
 package pl.edu.agh.mwo.invoice;
 
+import pl.edu.agh.mwo.invoice.product.Product;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -7,10 +9,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import pl.edu.agh.mwo.invoice.product.Product;
-
 public class Invoice {
-    private static AtomicInteger lastInvoiceNumber =  new AtomicInteger(0);
+    private static AtomicInteger lastInvoiceNumber = new AtomicInteger(0);
 
     private final int invoiceNumber;
 
@@ -18,9 +18,9 @@ public class Invoice {
         this.invoiceNumber = lastInvoiceNumber.incrementAndGet();
     }
 
-    public int getNumber(){
+    public int getNumber() {
         return this.invoiceNumber;
-    };
+    }
 
     public String getFormattedNumber() {
         LocalDate today = LocalDate.now();
@@ -67,6 +67,7 @@ public class Invoice {
         }
         return totalGross;
     }
+
     public String getProductSummary() {
         StringBuilder sb = new StringBuilder();
         sb.append("Faktura nr: ").append(getFormattedNumber()).append("\n");
@@ -83,9 +84,7 @@ public class Invoice {
                     .append(" zł\n");
             count++;
         }
-
         sb.append("Liczba pozycji: ").append(count);
         return sb.toString();
     }
-
 }

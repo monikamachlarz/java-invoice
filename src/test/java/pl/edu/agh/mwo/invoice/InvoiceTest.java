@@ -1,16 +1,14 @@
 package pl.edu.agh.mwo.invoice;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import pl.edu.agh.mwo.invoice.Invoice;
 import pl.edu.agh.mwo.invoice.product.*;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -130,7 +128,7 @@ public class InvoiceTest {
     }
 
     @Test
-    public void testInvoiceNumber(){
+    public void testInvoiceNumber() {
         int number = invoice.getNumber();
         Assert.assertThat(number, Matchers.greaterThan(0));
     }
@@ -143,7 +141,7 @@ public class InvoiceTest {
     }
 
     @Test
-    public void testInvoiceNumberHaveConsequentNumber(){
+    public void testInvoiceNumberHaveConsequentNumber() {
         Invoice invoice1 = new Invoice();
         Invoice invoice2 = new Invoice();
         Invoice invoice3 = new Invoice();

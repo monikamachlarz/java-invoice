@@ -21,7 +21,9 @@ public class FuelCanister extends Product {
     }
 
     private boolean isTaxFreeDay(LocalDate date) {
-        return date.getMonthValue() == 3 && date.getDayOfMonth() == 5;
+        int month = 3;
+        int day = 5;
+        return date.getMonthValue() == month && date.getDayOfMonth() == day;
     }
 
     // tylko do testów
